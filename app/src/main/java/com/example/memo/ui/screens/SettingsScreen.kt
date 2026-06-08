@@ -16,6 +16,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import android.os.PowerManager
+import android.provider.Settings
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import com.example.memo.ui.InstalledAppInfo
@@ -154,6 +160,32 @@ fun SettingsScreen(
                                     )
                                 }
                             }
+                        }
+                    }
+                }
+            }
+
+            // --- Battery Optimization ---
+            SettingSection(title = "Battery") {
+                val context = LocalContext.current
+                val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
+                val isIgnoring = powerManager.isIgnoringBatteryOptimizations(context.packageName)
+
+                Column {
+                    Text("Prevent the app from being killed in the background.", style = MaterialTheme.typography.bodyLarge)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    if (isIgnoring) {
+                        Text("✅ Battery optimization is disabled. App will run in background.", color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodyMedium)
+                    } else {
+                        Button(
+                            onClick = {
+                                val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)
+                                intent.data = Uri.parse("package:${context.packageName}")
+                                context.startActivity(intent)
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text("Disable Battery Optimization")
                         }
                     }
                 }
