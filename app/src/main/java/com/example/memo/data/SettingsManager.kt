@@ -10,7 +10,7 @@ class SettingsManager(context: Context) {
 
     companion object {
         const val KEY_CAPTURING_ENABLED = "capturing_enabled"
-        const val KEY_EXCLUDED_APPS = "excluded_apps"
+        const val KEY_INCLUDED_APPS = "included_apps"
         const val KEY_AUTO_DELETE_DAYS = "auto_delete_days"
     }
 
@@ -22,23 +22,23 @@ class SettingsManager(context: Context) {
         get() = prefs.getInt(KEY_AUTO_DELETE_DAYS, 0) // 0 = disabled
         set(value) = prefs.edit().putInt(KEY_AUTO_DELETE_DAYS, value).apply()
 
-    fun getExcludedApps(): Set<String> {
-        return prefs.getStringSet(KEY_EXCLUDED_APPS, emptySet()) ?: emptySet()
+    fun getIncludedApps(): Set<String> {
+        return prefs.getStringSet(KEY_INCLUDED_APPS, emptySet()) ?: emptySet()
     }
 
-    fun addExcludedApp(packageName: String) {
-        val current = getExcludedApps().toMutableSet()
+    fun addIncludedApp(packageName: String) {
+        val current = getIncludedApps().toMutableSet()
         current.add(packageName)
-        prefs.edit().putStringSet(KEY_EXCLUDED_APPS, current).apply()
+        prefs.edit().putStringSet(KEY_INCLUDED_APPS, current).apply()
     }
 
-    fun removeExcludedApp(packageName: String) {
-        val current = getExcludedApps().toMutableSet()
+    fun removeIncludedApp(packageName: String) {
+        val current = getIncludedApps().toMutableSet()
         current.remove(packageName)
-        prefs.edit().putStringSet(KEY_EXCLUDED_APPS, current).apply()
+        prefs.edit().putStringSet(KEY_INCLUDED_APPS, current).apply()
     }
 
-    fun isExcluded(packageName: String): Boolean {
-        return getExcludedApps().contains(packageName)
+    fun isIncluded(packageName: String): Boolean {
+        return getIncludedApps().contains(packageName)
     }
 }

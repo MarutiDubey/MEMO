@@ -7,6 +7,8 @@ import com.example.memo.data.EntryEntity
 import com.example.memo.data.SettingsManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class TypeVaultAccessibilityService : AccessibilityService() {
@@ -21,6 +23,11 @@ class TypeVaultAccessibilityService : AccessibilityService() {
         settingsManager = SettingsManager(applicationContext)
     }
 
+    private var debounceJob: Job? = null
+    private var lastPackageName: String? = null
+    private var lastAppName: String? = null
+    private var currentText: String = ""
+
     override fun onAccessibilityEvent(event: AccessibilityEvent) {
         // Respect global capturing toggle
         if (!settingsManager.isCapturingEnabled) return
@@ -29,14 +36,38 @@ class TypeVaultAccessibilityService : AccessibilityService() {
             val text = event.text.joinToString()
             val packageName = event.packageName?.toString() ?: "Unknown"
 
-            // Skip excluded apps and our own app
+            // Skip our own app
             if (packageName == this.packageName) return
-            if (settingsManager.isExcluded(packageName)) return
+            // ONLY process included apps
+            if (!settingsManager.isIncluded(packageName)) return
 
             if (text.isNotBlank()) {
                 val appName = getAppLabel(packageName)
-                saveEntry(text, packageName, appName)
+                
+                // If user switched apps, save immediately and start new
+                if (lastPackageName != null && lastPackageName != packageName) {
+                    commitCurrentText()
+                }
+
+                lastPackageName = packageName
+                lastAppName = appName
+                currentText = text
+
+                debounceJob?.cancel()
+                debounceJob = serviceScope.launch {
+                    delay(2000)
+                    commitCurrentText()
+                }
             }
+        }
+    }
+
+    private fun commitCurrentText() {
+        if (currentText.isNotBlank() && lastPackageName != null && lastAppName != null) {
+            saveEntry(currentText, lastPackageName!!, lastAppName!!)
+            currentText = ""
+            lastPackageName = null
+            lastAppName = null
         }
     }
 

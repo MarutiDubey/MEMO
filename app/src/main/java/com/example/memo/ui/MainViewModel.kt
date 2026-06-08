@@ -34,8 +34,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _isCapturing = MutableStateFlow(true)
     val isCapturing: StateFlow<Boolean> = _isCapturing.asStateFlow()
 
-    private val _excludedApps = MutableStateFlow<Set<String>>(emptySet())
-    val excludedApps: StateFlow<Set<String>> = _excludedApps.asStateFlow()
+    private val _includedApps = MutableStateFlow<Set<String>>(emptySet())
+    val includedApps: StateFlow<Set<String>> = _includedApps.asStateFlow()
+
+    private val _installedApps = MutableStateFlow<List<InstalledAppInfo>>(emptyList())
+    val installedApps: StateFlow<List<InstalledAppInfo>> = _installedApps.asStateFlow()
 
     private val _autoDeleteDays = MutableStateFlow(0)
     val autoDeleteDays: StateFlow<Int> = _autoDeleteDays.asStateFlow()
@@ -47,8 +50,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
         // Load initial settings
         _isCapturing.value = settings.isCapturingEnabled
-        _excludedApps.value = settings.getExcludedApps()
+        _includedApps.value = settings.getIncludedApps()
         _autoDeleteDays.value = settings.autoDeleteDays
+
+        loadInstalledApps(application)
 
         viewModelScope.launch {
             repository.distinctApps.collect { apps ->
@@ -98,14 +103,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         _isCapturing.value = enabled
     }
 
-    fun addExcludedApp(packageName: String) {
-        settings.addExcludedApp(packageName)
-        _excludedApps.value = settings.getExcludedApps()
+    fun addIncludedApp(packageName: String) {
+        settings.addIncludedApp(packageName)
+        _includedApps.value = settings.getIncludedApps()
     }
 
-    fun removeExcludedApp(packageName: String) {
-        settings.removeExcludedApp(packageName)
-        _excludedApps.value = settings.getExcludedApps()
+    fun removeIncludedApp(packageName: String) {
+        settings.removeIncludedApp(packageName)
+        _includedApps.value = settings.getIncludedApps()
     }
 
     fun setAutoDeleteDays(days: Int) {
@@ -127,4 +132,26 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             }
         }
     }
+
+    private fun loadInstalledApps(application: Application) {
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            val pm = application.packageManager
+            val packages = pm.getInstalledApplications(android.content.pm.PackageManager.GET_META_DATA)
+            val apps = packages.filter { 
+                pm.getLaunchIntentForPackage(it.packageName) != null 
+            }.map {
+                InstalledAppInfo(
+                    appName = pm.getApplicationLabel(it).toString(),
+                    packageName = it.packageName
+                )
+            }.sortedBy { it.appName.lowercase() }
+            
+            _installedApps.value = apps
+        }
+    }
 }
+
+data class InstalledAppInfo(
+    val appName: String,
+    val packageName: String
+)

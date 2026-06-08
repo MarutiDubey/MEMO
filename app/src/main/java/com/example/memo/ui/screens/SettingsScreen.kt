@@ -18,23 +18,23 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import com.example.memo.ui.InstalledAppInfo
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     isCapturing: Boolean,
-    excludedApps: Set<String>,
+    includedApps: Set<String>,
+    installedApps: List<InstalledAppInfo>,
     autoDeleteDays: Int,
     onBackClick: () -> Unit,
     onCapturingToggle: (Boolean) -> Unit,
-    onAddExcludedApp: (String) -> Unit,
-    onRemoveExcludedApp: (String) -> Unit,
+    onIncludeApp: (String) -> Unit,
+    onExcludeApp: (String) -> Unit,
     onAutoDeleteChanged: (Int) -> Unit,
     onClearAllData: () -> Unit
 ) {
-    var showAddExcludeDialog by remember { mutableStateOf(false) }
     var showClearConfirmDialog by remember { mutableStateOf(false) }
-    var newPackageName by remember { mutableStateOf("") }
 
     val autoDeleteOptions = listOf(0 to "Off", 30 to "30 days", 60 to "60 days", 90 to "90 days")
     var autoDeleteExpanded by remember { mutableStateOf(false) }
@@ -113,39 +113,48 @@ fun SettingsScreen(
                 }
             }
 
-            // --- Excluded Apps ---
-            SettingSection(title = "Excluded Apps") {
+            // --- Included Apps ---
+            SettingSection(title = "Included Apps") {
                 Column {
                     Text(
-                        "Apps in this list will NOT be logged.",
+                        "Only the apps selected below will be logged. By default, no apps are logged.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    if (excludedApps.isEmpty()) {
-                        Text("No apps excluded.", style = MaterialTheme.typography.bodyMedium)
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    if (installedApps.isEmpty()) {
+                        CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
                     } else {
-                        excludedApps.forEach { pkg ->
+                        // We will limit height of this list so it's scrollable within the column, or since
+                        // the whole screen is vertically scrollable, we can just render them all. 
+                        // Rendering all apps could be slow, but it's simple. Let's render them all.
+                        installedApps.forEach { appInfo ->
+                            val isChecked = includedApps.contains(appInfo.packageName)
                             Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceBetween
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text(pkg, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
-                                IconButton(onClick = { onRemoveExcludedApp(pkg) }) {
-                                    Icon(Icons.Default.Delete, contentDescription = "Remove", tint = MaterialTheme.colorScheme.error)
+                                Checkbox(
+                                    checked = isChecked,
+                                    onCheckedChange = { checked ->
+                                        if (checked) onIncludeApp(appInfo.packageName)
+                                        else onExcludeApp(appInfo.packageName)
+                                    }
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Column {
+                                    Text(appInfo.appName, style = MaterialTheme.typography.bodyMedium)
+                                    Text(
+                                        appInfo.packageName,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
                                 }
                             }
                         }
-                    }
-                    Spacer(modifier = Modifier.height(8.dp))
-                    OutlinedButton(
-                        onClick = { showAddExcludeDialog = true },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Icon(Icons.Default.Add, contentDescription = null)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Add Excluded App")
                     }
                 }
             }
@@ -163,45 +172,7 @@ fun SettingsScreen(
         }
     }
 
-    // --- Add Excluded App Dialog ---
-    if (showAddExcludeDialog) {
-        AlertDialog(
-            onDismissRequest = { showAddExcludeDialog = false },
-            title = { Text("Add Excluded App") },
-            text = {
-                Column {
-                    Text("Enter the package name of the app to exclude (e.g., com.example.banking).")
-                    Spacer(modifier = Modifier.height(8.dp))
-                    OutlinedTextField(
-                        value = newPackageName,
-                        onValueChange = { newPackageName = it },
-                        label = { Text("Package name") },
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                        keyboardActions = KeyboardActions(onDone = {
-                            if (newPackageName.isNotBlank()) {
-                                onAddExcludedApp(newPackageName.trim())
-                                newPackageName = ""
-                                showAddExcludeDialog = false
-                            }
-                        })
-                    )
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = {
-                    if (newPackageName.isNotBlank()) {
-                        onAddExcludedApp(newPackageName.trim())
-                        newPackageName = ""
-                        showAddExcludeDialog = false
-                    }
-                }) { Text("Add") }
-            },
-            dismissButton = {
-                TextButton(onClick = { showAddExcludeDialog = false }) { Text("Cancel") }
-            }
-        )
-    }
+    // Add Excluded App Dialog removed
 
     // --- Confirm Clear All Dialog ---
     if (showClearConfirmDialog) {

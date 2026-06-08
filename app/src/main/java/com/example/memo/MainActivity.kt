@@ -117,17 +117,19 @@ fun MemoApp() {
         // --- Settings Screen ---
         composable("settings") {
             val isCapturing by viewModel.isCapturing.collectAsState()
-            val excludedApps by viewModel.excludedApps.collectAsState()
+            val includedApps by viewModel.includedApps.collectAsState()
+            val installedApps by viewModel.installedApps.collectAsState()
             val autoDeleteDays by viewModel.autoDeleteDays.collectAsState()
 
             SettingsScreen(
                 isCapturing = isCapturing,
-                excludedApps = excludedApps,
+                includedApps = includedApps,
+                installedApps = installedApps,
                 autoDeleteDays = autoDeleteDays,
                 onBackClick = { navController.popBackStack() },
                 onCapturingToggle = { viewModel.setCapturingEnabled(it) },
-                onAddExcludedApp = { viewModel.addExcludedApp(it) },
-                onRemoveExcludedApp = { viewModel.removeExcludedApp(it) },
+                onIncludeApp = { viewModel.addIncludedApp(it) },
+                onExcludeApp = { viewModel.removeIncludedApp(it) },
                 onAutoDeleteChanged = { viewModel.setAutoDeleteDays(it) },
                 onClearAllData = { viewModel.clearAllData() }
             )
