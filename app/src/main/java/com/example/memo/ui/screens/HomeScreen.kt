@@ -10,7 +10,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Android
+import androidx.compose.material.icons.filled.List
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -55,7 +55,7 @@ fun HomeScreen(
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Icon(
-                        Icons.Default.Android,
+                        Icons.Default.List,
                         contentDescription = null,
                         modifier = Modifier.size(64.dp),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
@@ -123,7 +123,7 @@ fun AppFolderItem(app: AppFolder, onClick: () -> Unit) {
                 )
             } else {
                 Icon(
-                    Icons.Default.Android,
+                    Icons.Default.List,
                     contentDescription = null,
                     modifier = Modifier.size(44.dp),
                     tint = MaterialTheme.colorScheme.secondary
