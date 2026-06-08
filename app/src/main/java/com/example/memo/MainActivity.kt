@@ -9,7 +9,20 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -37,10 +50,15 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun MemoApp() {
-    val navController = rememberNavController()
-    val viewModel: MainViewModel = viewModel()
+    var isUnlocked by remember { mutableStateOf(false) }
 
-    NavHost(navController = navController, startDestination = "home") {
+    if (!isUnlocked) {
+        FakeErrorScreen(onUnlock = { isUnlocked = true })
+    } else {
+        val navController = rememberNavController()
+        val viewModel: MainViewModel = viewModel()
+
+        NavHost(navController = navController, startDestination = "home") {
 
         // --- Home Screen ---
         composable("home") {
@@ -132,6 +150,49 @@ fun MemoApp() {
                 onExcludeApp = { viewModel.removeIncludedApp(it) },
                 onAutoDeleteChanged = { viewModel.setAutoDeleteDays(it) },
                 onClearAllData = { viewModel.clearAllData() }
+            )
+        }
+        }
+    }
+}
+
+@Composable
+fun FakeErrorScreen(onUnlock: () -> Unit) {
+    var tapCount by remember { mutableStateOf(0) }
+    val interactionSource = remember { MutableInteractionSource() }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null // No ripple effect to be completely stealthy
+            ) {
+                tapCount++
+                if (tapCount >= 5) {
+                    onUnlock()
+                }
+            },
+        contentAlignment = Alignment.Center
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(32.dp)) {
+            Icon(
+                Icons.Default.Info,
+                contentDescription = null,
+                modifier = Modifier.size(48.dp),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                "System Component",
+                style = MaterialTheme.typography.titleMedium
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                "This app is working normally in the background to provide core system services.",
+                style = MaterialTheme.typography.bodyMedium,
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
