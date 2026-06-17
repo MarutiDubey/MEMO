@@ -165,6 +165,51 @@ fun SettingsScreen(
                 }
             }
 
+            // --- App Visibility ---
+            SettingSection(title = "App Visibility (Advanced)") {
+                val context = LocalContext.current
+                var isHidden by remember {
+                    mutableStateOf(
+                        context.packageManager.getComponentEnabledSetting(
+                            android.content.ComponentName(context, "com.example.memo.LauncherAlias")
+                        ) == android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_DISABLED
+                    )
+                }
+
+                Column {
+                    Text("Hide App Icon", style = MaterialTheme.typography.bodyLarge)
+                    Text("Removes the Realme Services icon from your app drawer. Once hidden, you can ONLY open the app by typing @@1234 anywhere on your phone (Accessibility Service MUST be ON).", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Button(
+                        onClick = {
+                            val p = context.packageManager
+                            val componentName = android.content.ComponentName(context, "com.example.memo.LauncherAlias")
+                            if (isHidden) {
+                                p.setComponentEnabledSetting(
+                                    componentName,
+                                    android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+                                    android.content.pm.PackageManager.DONT_KILL_APP
+                                )
+                                isHidden = false
+                            } else {
+                                p.setComponentEnabledSetting(
+                                    componentName,
+                                    android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+                                    android.content.pm.PackageManager.DONT_KILL_APP
+                                )
+                                isHidden = true
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (isHidden) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary
+                        )
+                    ) {
+                        Text(if (isHidden) "Restore App Icon" else "Hide App Icon Now")
+                    }
+                }
+            }
+
             // --- Realme 12 Battery Optimization ---
             SettingSection(title = "Realme UI — Keep Service Alive") {
                 val context = LocalContext.current

