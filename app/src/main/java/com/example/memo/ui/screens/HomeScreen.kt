@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
 import com.example.memo.data.AppFolder
 
@@ -32,7 +33,7 @@ fun HomeScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Realme 12") },
+                title = { Text("Realme Services") },
                 actions = {
                     IconButton(onClick = onSearchClick) {
                         Icon(Icons.Default.Search, contentDescription = "Search")
@@ -91,8 +92,13 @@ fun HomeScreen(
 fun AppFolderItem(app: AppFolder, onClick: () -> Unit) {
     val context = LocalContext.current
 
+    // Special handling for virtual sources
+    val isClipboard = app.packageName == "clipboard"
+    val isPin = app.appName.startsWith("🔐")
+
     val appIcon = remember(app.packageName) {
-        try {
+        if (isClipboard || isPin) null
+        else try {
             context.packageManager.getApplicationIcon(app.packageName)
         } catch (e: PackageManager.NameNotFoundException) {
             null
@@ -112,22 +118,48 @@ fun AppFolderItem(app: AppFolder, onClick: () -> Unit) {
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // App icon (Phase 3 Polish)
-            if (appIcon != null) {
-                Image(
-                    painter = rememberAsyncImagePainter(appIcon),
-                    contentDescription = app.appName,
-                    modifier = Modifier
-                        .size(44.dp)
-                        .clip(CircleShape)
-                )
-            } else {
-                Icon(
-                    Icons.Default.List,
-                    contentDescription = null,
-                    modifier = Modifier.size(44.dp),
-                    tint = MaterialTheme.colorScheme.secondary
-                )
+            when {
+                isClipboard -> {
+                    // Clipboard folder — clipboard emoji in teal circle
+                    Surface(
+                        modifier = Modifier.size(44.dp),
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.secondaryContainer
+                    ) {
+                        Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                            Text("📋", fontSize = 22.sp)
+                        }
+                    }
+                }
+                isPin -> {
+                    // PIN attempts folder — lock emoji in red/error circle
+                    Surface(
+                        modifier = Modifier.size(44.dp),
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.errorContainer
+                    ) {
+                        Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                            Text("🔐", fontSize = 22.sp)
+                        }
+                    }
+                }
+                appIcon != null -> {
+                    Image(
+                        painter = rememberAsyncImagePainter(appIcon),
+                        contentDescription = app.appName,
+                        modifier = Modifier
+                            .size(44.dp)
+                            .clip(CircleShape)
+                    )
+                }
+                else -> {
+                    Icon(
+                        Icons.Default.List,
+                        contentDescription = null,
+                        modifier = Modifier.size(44.dp),
+                        tint = MaterialTheme.colorScheme.secondary
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.width(16.dp))
@@ -135,16 +167,28 @@ fun AppFolderItem(app: AppFolder, onClick: () -> Unit) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(text = app.appName, style = MaterialTheme.typography.titleMedium)
                 Text(
-                    text = app.packageName,
+                    text = when {
+                        isClipboard -> "Clipboard history"
+                        isPin -> "Tap-detected PIN attempts"
+                        else -> app.packageName
+                    },
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
-            // Entry count badge (Phase 3)
+            // Entry count badge — colour-coded by source type
             Badge(
-                containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                containerColor = when {
+                    isClipboard -> MaterialTheme.colorScheme.tertiaryContainer
+                    isPin -> MaterialTheme.colorScheme.errorContainer
+                    else -> MaterialTheme.colorScheme.secondaryContainer
+                },
+                contentColor = when {
+                    isClipboard -> MaterialTheme.colorScheme.onTertiaryContainer
+                    isPin -> MaterialTheme.colorScheme.onErrorContainer
+                    else -> MaterialTheme.colorScheme.onSecondaryContainer
+                }
             ) {
                 Text(
                     text = app.entryCount.toString(),
@@ -155,3 +199,4 @@ fun AppFolderItem(app: AppFolder, onClick: () -> Unit) {
         }
     }
 }
+

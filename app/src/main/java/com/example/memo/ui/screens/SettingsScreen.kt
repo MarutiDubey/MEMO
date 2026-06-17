@@ -165,31 +165,92 @@ fun SettingsScreen(
                 }
             }
 
-            // --- Battery Optimization ---
-            SettingSection(title = "Battery") {
+            // --- Realme 12 Battery Optimization ---
+            SettingSection(title = "Realme UI — Keep Service Alive") {
                 val context = LocalContext.current
                 val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
                 val isIgnoring = powerManager.isIgnoringBatteryOptimizations(context.packageName)
 
-                Column {
-                    Text("Prevent the app from being killed in the background.", style = MaterialTheme.typography.bodyLarge)
-                    Spacer(modifier = Modifier.height(8.dp))
-                    if (isIgnoring) {
-                        Text("✅ Battery optimization is disabled. App will run in background.", color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodyMedium)
-                    } else {
-                        Button(
-                            onClick = {
-                                val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)
-                                intent.data = Uri.parse("package:${context.packageName}")
-                                context.startActivity(intent)
-                            },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text("Disable Battery Optimization")
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text(
+                        "⚠️ Realme UI aggressively kills background apps. Do ALL 3 steps:",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.error
+                    )
+
+                    // Step 1
+                    Card(colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    )) {
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            Text("Step 1 — Battery Optimization", style = MaterialTheme.typography.labelLarge)
+                            Spacer(modifier = Modifier.height(4.dp))
+                            if (isIgnoring) {
+                                Text("✅ Done — Battery optimization disabled", color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodySmall)
+                            } else {
+                                Text("Tap below to disable battery optimization for this app.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Button(
+                                    onClick = {
+                                        val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)
+                                        intent.data = Uri.parse("package:${context.packageName}")
+                                        context.startActivity(intent)
+                                    },
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Text("Disable Battery Optimization")
+                                }
+                            }
+                        }
+                    }
+
+                    // Step 2
+                    Card(colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    )) {
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            Text("Step 2 — Auto-Start Permission", style = MaterialTheme.typography.labelLarge)
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                "Settings → App Management → Realme Services → Other Permissions → Allow Auto-Start  →  ON",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+
+                    // Step 3
+                    Card(colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    )) {
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            Text("Step 3 — Smart Freeze OFF", style = MaterialTheme.typography.labelLarge)
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                "Settings → Battery → App Quick Freeze → find Realme Services → Remove from list (unfreeze it)",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+
+                    // Step 4 - Realme specific
+                    Card(colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    )) {
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            Text("Step 4 — Lock App in Recents", style = MaterialTheme.typography.labelLarge)
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                "Open Recents screen → Long-press on Realme Services card → tap the 🔒 Lock icon → This prevents Realme from clearing it",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                         }
                     }
                 }
             }
+
 
             // --- Danger Zone ---
             SettingSection(title = "Danger Zone") {

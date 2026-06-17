@@ -1,5 +1,6 @@
 package com.example.memo.data
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
@@ -10,5 +11,7 @@ data class EntryEntity(
     val appName: String,
     val packageName: String,
     val typedText: String,
-    val timestamp: Long
+    val timestamp: Long,
+    @ColumnInfo(name = "source", defaultValue = "KEYBOARD")
+    val source: String = "KEYBOARD"  // "KEYBOARD" or "CLIPBOARD"
 )

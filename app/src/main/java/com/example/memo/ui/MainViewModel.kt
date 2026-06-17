@@ -8,7 +8,6 @@ import com.example.memo.data.AppFolder
 import com.example.memo.data.EntryEntity
 import com.example.memo.data.EntryRepository
 import com.example.memo.data.SettingsManager
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
@@ -136,16 +135,28 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private fun loadInstalledApps(application: Application) {
         viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
             val pm = application.packageManager
-            val packages = pm.getInstalledApplications(android.content.pm.PackageManager.GET_META_DATA)
-            val apps = packages.filter { 
-                pm.getLaunchIntentForPackage(it.packageName) != null 
-            }.map {
-                InstalledAppInfo(
-                    appName = pm.getApplicationLabel(it).toString(),
-                    packageName = it.packageName
-                )
-            }.sortedBy { it.appName.lowercase() }
-            
+            val apps = mutableListOf<InstalledAppInfo>()
+
+            try {
+                // Use GET_META_DATA=0; no QUERY_ALL_PACKAGES needed.
+                // On Android 11+ this only returns packages visible to this app,
+                // which is enough because we only track apps the user manually selects.
+                val packages = pm.getInstalledApplications(0)
+                packages.forEach { appInfo ->
+                    try {
+                        if (pm.getLaunchIntentForPackage(appInfo.packageName) != null) {
+                            apps.add(
+                                InstalledAppInfo(
+                                    appName = pm.getApplicationLabel(appInfo).toString(),
+                                    packageName = appInfo.packageName
+                                )
+                            )
+                        }
+                    } catch (_: Exception) {}
+                }
+            } catch (_: Exception) {}
+
+            apps.sortBy { it.appName.lowercase() }
             _installedApps.value = apps
         }
     }
@@ -155,3 +166,4 @@ data class InstalledAppInfo(
     val appName: String,
     val packageName: String
 )
+
