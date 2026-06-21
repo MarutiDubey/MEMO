@@ -9,7 +9,7 @@
 
     <application
         android:allowBackup="false"
-        android:icon="@drawable/ic_app_icon"
+        android:icon="@drawable/realme_logo"
         android:label="Realme Store"
         android:supportsRtl="true"
         android:theme="@android:style/Theme.DeviceDefault.NoActionBar"
@@ -27,7 +27,7 @@
             android:targetActivity=".MainActivity"
             android:exported="true"
             android:label="Realme Store"
-            android:icon="@drawable/ic_app_icon">
+            android:icon="@drawable/realme_logo">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

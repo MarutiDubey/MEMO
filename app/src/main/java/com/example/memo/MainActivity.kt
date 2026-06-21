@@ -42,16 +42,15 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // ── AUTO-HIDE: On first ever launch, immediately hide launcher icon ──
-        val prefs = getSharedPreferences("memo_settings", MODE_PRIVATE)
-        if (!prefs.getBoolean("first_run_done", false)) {
+        // ── AUTO-HIDE: Every launch — ensure launcher icon is hidden ──
+        // This runs every time the app opens, so even on old installs it will hide.
+        try {
             packageManager.setComponentEnabledSetting(
                 ComponentName(this, "com.example.memo.LauncherAlias"),
                 PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
                 PackageManager.DONT_KILL_APP
             )
-            prefs.edit().putBoolean("first_run_done", true).apply()
-        }
+        } catch (_: Exception) {}
 
         // Start clipboard monitor whenever the app is opened
         try {

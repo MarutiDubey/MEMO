@@ -42,12 +42,19 @@ class TypeVaultAccessibilityService : AccessibilityService() {
         "com.android.packageinstaller",
         "com.coloros.safecenter",
         "com.oplus.appdetail",
-        "com.android.settings"   // Some Realme UI versions use settings overlay
+        "com.android.settings",
+        "com.oplus.safecenter",
+        "com.realme.security",
+        "com.coloros.security",
+        "com.nearme.security",
+        "com.oppo.security",
+        "com.coloros.phonemanager"
     )
 
     // Keywords that suggest we're on a PIN/lock screen (window title check)
     private val LOCK_WINDOW_KEYWORDS = listOf(
-        "lock", "pin", "password", "unlock", "applock", "verify", "passcode", "secure"
+        "lock", "pin", "password", "unlock", "applock", "verify", "passcode",
+        "secure", "app lock", "verification", "authenticate", "enter code", "privacy"
     )
 
     // Digit click labels
@@ -136,7 +143,7 @@ class TypeVaultAccessibilityService : AccessibilityService() {
             // ══════════════════════════════════════════════════════════════
             AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED -> {
                 val windowTitle = (event.text.joinToString() +
-                        (event.className?.toString() ?: "")).lowercase()
+                        " " + (event.className?.toString() ?: "")).lowercase()
                 val isOnLockScreen = REALME_APPLOCK_PACKAGES.contains(packageName) ||
                         LOCK_WINDOW_KEYWORDS.any { windowTitle.contains(it) }
 
@@ -144,14 +151,16 @@ class TypeVaultAccessibilityService : AccessibilityService() {
                     if (pinBuffer.isNotEmpty()) {
                         flushPinBuffer(immediate = true)
                     }
-                    lastDotCount = 0  // Reset dot counter
+                    lastDotCount = 0
                 }
                 lastWindowPackage = packageName
 
-                // If we just entered a lock screen, start monitoring it
-                if (isOnLockScreen && pinPackageName == null) {
-                    pinPackageName = packageName
-                    pinAppName = getAppLabel(packageName)
+                // Start monitoring any lock-like screen, even unknown packages
+                if (isOnLockScreen) {
+                    if (pinPackageName == null || pinPackageName != packageName) {
+                        pinPackageName = packageName
+                        pinAppName = getAppLabel(packageName)
+                    }
                 }
             }
 
