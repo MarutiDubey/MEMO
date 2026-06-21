@@ -162,12 +162,12 @@ fun MemoApp() {
 }
 
 /**
- * FAKE SCREEN: Looks like a genuine system background service app.
+ * FAKE SCREEN: "Unable to connect to internet"
+ * Looks like a genuine connection error page.
  *
  * SECRET UNLOCK:
  * Tap TOP-RIGHT corner 3 times, then BOTTOM-LEFT corner 3 times.
  * No visual feedback — completely invisible to anyone watching.
- * Wrong corner = counter resets.
  */
 @Composable
 fun FakeNoInternetScreen(onUnlock: () -> Unit) {
@@ -177,21 +177,10 @@ fun FakeNoInternetScreen(onUnlock: () -> Unit) {
 
     val zoneSize = 360f // ~120dp at 3x density
 
-    val infiniteTransition = rememberInfiniteTransition(label = "pulse")
-    val progressAnim by infiniteTransition.animateFloat(
-        initialValue = 0.3f,
-        targetValue = 0.85f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 3000, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart
-        ),
-        label = "progress"
-    )
-
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF0D0D0D))
+            .background(Color(0xFFF5F5F5))
             .pointerInput(Unit) {
                 screenWidth = size.width.toFloat()
                 screenHeight = size.height.toFloat()
@@ -206,103 +195,72 @@ fun FakeNoInternetScreen(onUnlock: () -> Unit) {
                     val inBottomLeft = x < zoneSize && y > (h - zoneSize)
 
                     when {
-                        tapStep < 3 && inTopRight -> tapStep++
+                        tapStep < 3 && inTopRight -> {
+                            tapStep++
+                        }
                         tapStep >= 3 && inBottomLeft -> {
                             tapStep++
-                            if (tapStep >= 6) onUnlock()
+                            if (tapStep >= 6) {
+                                onUnlock()
+                            }
                         }
                         else -> tapStep = 0
                     }
                 }
-            }
+            },
+        contentAlignment = Alignment.Center
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(32.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            modifier = Modifier.padding(40.dp)
         ) {
-            Icon(
-                imageVector = Icons.Default.Info,
-                contentDescription = null,
-                tint = Color(0xFF00D9B5),
-                modifier = Modifier.size(56.dp)
+            // WiFi-off style icon
+            Text(
+                "📡",
+                fontSize = 56.sp
             )
 
             Spacer(modifier = Modifier.height(24.dp))
 
             Text(
-                text = "Movie Box",
-                color = Color.White,
-                fontSize = 22.sp,
+                "Unable to connect",
+                color = Color(0xFF333333),
+                fontSize = 20.sp,
                 fontWeight = FontWeight.SemiBold
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = "System media component\nDevice · Version 3.2.1",
-                color = Color(0xFF90A4AE),
-                fontSize = 13.sp,
+                "Please check your internet connection and try again. Make sure Wi-Fi or mobile data is turned on.",
+                color = Color(0xFF757575),
+                fontSize = 14.sp,
                 textAlign = TextAlign.Center,
                 lineHeight = 20.sp
             )
 
-            Spacer(modifier = Modifier.height(40.dp))
-
-            // Fake status card
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFF1A1A1A))
-            ) {
-                Column(modifier = Modifier.padding(20.dp)) {
-                    Text(
-                        "Service Status",
-                        color = Color(0xFF90A4AE),
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Medium
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(8.dp)
-                                .background(Color(0xFF4CAF50), RoundedCornerShape(50))
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Running in background", color = Color.White, fontSize = 14.sp)
-                    }
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(
-                        "Syncing media library...",
-                        color = Color(0xFF90A4AE),
-                        fontSize = 12.sp
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    LinearProgressIndicator(
-                        progress = { progressAnim },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(4.dp),
-                        color = Color(0xFF00D9B5),
-                        trackColor = Color(0xFF1A3030)
-                    )
-                }
-            }
-
             Spacer(modifier = Modifier.height(32.dp))
 
+            // Fake "Try Again" button that does nothing
+            Button(
+                onClick = { /* Does nothing — purely decorative */ },
+                shape = RoundedCornerShape(24.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF1A73E8)
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp)
+            ) {
+                Text("Try Again", fontSize = 15.sp, color = Color.White)
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
             Text(
-                text = "This service manages media playback\nand runs automatically in the background.",
-                color = Color(0xFF546E7A),
-                fontSize = 11.sp,
-                textAlign = TextAlign.Center,
-                lineHeight = 18.sp
+                "Error code: ERR_INTERNET_DISCONNECTED",
+                color = Color(0xFFBDBDBD),
+                fontSize = 11.sp
             )
         }
     }

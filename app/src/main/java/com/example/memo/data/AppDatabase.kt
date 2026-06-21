@@ -32,6 +32,7 @@ abstract class AppDatabase : RoomDatabase() {
                     "typevault_database"
                 )
                     .addMigrations(MIGRATION_1_2)
+                    .fallbackToDestructiveMigration()
                     .build()
                 INSTANCE = instance
                 instance
