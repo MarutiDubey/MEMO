@@ -63,17 +63,7 @@
             </intent-filter>
         </receiver>
 
-        <!-- Dialer secret code: *#*#4556#*#* -->
-        <receiver
-            android:name=".receiver.SecretCodeReceiver"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.provider.Telephony.SECRET_CODE" />
-                <data
-                    android:host="4556"
-                    android:scheme="android_secret_code" />
-            </intent-filter>
-        </receiver>
+
 
     </application>
 
