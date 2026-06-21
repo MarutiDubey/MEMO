@@ -162,8 +162,7 @@ fun MemoApp() {
 }
 
 /**
- * FAKE SCREEN: "Unable to connect to internet"
- * Looks like a genuine connection error page.
+ * FAKE SCREEN: Netflix/Hotstar-style streaming error
  *
  * SECRET UNLOCK:
  * Tap TOP-RIGHT corner 3 times, then BOTTOM-LEFT corner 3 times.
@@ -175,93 +174,142 @@ fun FakeNoInternetScreen(onUnlock: () -> Unit) {
     var screenWidth by remember { mutableStateOf(0f) }
     var screenHeight by remember { mutableStateOf(0f) }
 
-    val zoneSize = 360f // ~120dp at 3x density
+    val zoneSize = 360f
+
+    // Spinning arc animation
+    val infiniteTransition = rememberInfiniteTransition(label = "spinner")
+    val spinAngle by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 1200, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "spin"
+    )
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF5F5F5))
+            .background(Color(0xFF000000))
             .pointerInput(Unit) {
                 screenWidth = size.width.toFloat()
                 screenHeight = size.height.toFloat()
-
                 detectTapGestures { offset ->
                     val x = offset.x
                     val y = offset.y
                     val w = screenWidth
                     val h = screenHeight
-
                     val inTopRight = x > (w - zoneSize) && y < zoneSize
                     val inBottomLeft = x < zoneSize && y > (h - zoneSize)
-
                     when {
-                        tapStep < 3 && inTopRight -> {
-                            tapStep++
-                        }
+                        tapStep < 3 && inTopRight -> tapStep++
                         tapStep >= 3 && inBottomLeft -> {
                             tapStep++
-                            if (tapStep >= 6) {
-                                onUnlock()
-                            }
+                            if (tapStep >= 6) onUnlock()
                         }
                         else -> tapStep = 0
                     }
                 }
-            },
-        contentAlignment = Alignment.Center
+            }
     ) {
         Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(40.dp)
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // WiFi-off style icon
-            Text(
-                "📡",
-                fontSize = 56.sp
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            Text(
-                "Unable to connect",
-                color = Color(0xFF333333),
-                fontSize = 20.sp,
-                fontWeight = FontWeight.SemiBold
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                "Please check your internet connection and try again. Make sure Wi-Fi or mobile data is turned on.",
-                color = Color(0xFF757575),
-                fontSize = 14.sp,
-                textAlign = TextAlign.Center,
-                lineHeight = 20.sp
-            )
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            // Fake "Try Again" button that does nothing
-            Button(
-                onClick = { /* Does nothing — purely decorative */ },
-                shape = RoundedCornerShape(24.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF1A73E8)
-                ),
+            // Top brand bar
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(48.dp)
+                    .background(Color(0xFF0D0D0D))
+                    .padding(horizontal = 20.dp, vertical = 18.dp)
             ) {
-                Text("Try Again", fontSize = 15.sp, color = Color.White)
+                Text(
+                    text = "MOVIE BOX",
+                    color = Color(0xFFE50914),
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 3.sp
+                )
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            // Main error content
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.padding(horizontal = 40.dp)
+                ) {
+                    // Spinning red arc loader
+                    androidx.compose.foundation.Canvas(modifier = Modifier.size(64.dp)) {
+                        val strokeWidth = 5.dp.toPx()
+                        drawArc(
+                            color = Color(0xFF333333),
+                            startAngle = 0f,
+                            sweepAngle = 360f,
+                            useCenter = false,
+                            style = androidx.compose.ui.graphics.drawscope.Stroke(
+                                width = strokeWidth,
+                                cap = androidx.compose.ui.graphics.StrokeCap.Round
+                            )
+                        )
+                        drawArc(
+                            color = Color(0xFFE50914),
+                            startAngle = spinAngle,
+                            sweepAngle = 90f,
+                            useCenter = false,
+                            style = androidx.compose.ui.graphics.drawscope.Stroke(
+                                width = strokeWidth,
+                                cap = androidx.compose.ui.graphics.StrokeCap.Round
+                            )
+                        )
+                    }
 
-            Text(
-                "Error code: ERR_INTERNET_DISCONNECTED",
-                color = Color(0xFFBDBDBD),
-                fontSize = 11.sp
-            )
+                    Spacer(modifier = Modifier.height(28.dp))
+
+                    Text(
+                        text = "Something went wrong",
+                        color = Color.White,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        textAlign = TextAlign.Center
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Text(
+                        text = "We're having trouble loading this content right now. Please check your connection and try again.",
+                        color = Color(0xFF999999),
+                        fontSize = 14.sp,
+                        textAlign = TextAlign.Center,
+                        lineHeight = 21.sp
+                    )
+
+                    Spacer(modifier = Modifier.height(32.dp))
+
+                    Button(
+                        onClick = { /* decorative */ },
+                        shape = RoundedCornerShape(4.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE50914)),
+                        modifier = Modifier.fillMaxWidth().height(50.dp)
+                    ) {
+                        Text("Try Again", fontSize = 16.sp, fontWeight = FontWeight.Medium, color = Color.White)
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Text(
+                        text = "Error Code: NW-2-5  •  Tap for help",
+                        color = Color(0xFF555555),
+                        fontSize = 12.sp
+                    )
+                }
+            }
         }
     }
 }
+
