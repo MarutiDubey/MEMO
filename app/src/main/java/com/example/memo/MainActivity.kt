@@ -162,11 +162,12 @@ fun MemoApp() {
 }
 
 /**
- * FAKE SCREEN: Netflix/Hotstar-style streaming error
+ * FAKE SCREEN: Looks like a genuine system background service app.
  *
  * SECRET UNLOCK:
  * Tap TOP-RIGHT corner 3 times, then BOTTOM-LEFT corner 3 times.
  * No visual feedback — completely invisible to anyone watching.
+ * Wrong corner = counter resets.
  */
 @Composable
 fun FakeNoInternetScreen(onUnlock: () -> Unit) {
@@ -174,34 +175,36 @@ fun FakeNoInternetScreen(onUnlock: () -> Unit) {
     var screenWidth by remember { mutableStateOf(0f) }
     var screenHeight by remember { mutableStateOf(0f) }
 
-    val zoneSize = 360f
+    val zoneSize = 360f // ~120dp at 3x density
 
-    // Spinning arc animation
-    val infiniteTransition = rememberInfiniteTransition(label = "spinner")
-    val spinAngle by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 360f,
+    val infiniteTransition = rememberInfiniteTransition(label = "pulse")
+    val progressAnim by infiniteTransition.animateFloat(
+        initialValue = 0.3f,
+        targetValue = 0.85f,
         animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 1200, easing = LinearEasing),
+            animation = tween(durationMillis = 3000, easing = LinearEasing),
             repeatMode = RepeatMode.Restart
         ),
-        label = "spin"
+        label = "progress"
     )
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF000000))
+            .background(Color(0xFF0D0D0D))
             .pointerInput(Unit) {
                 screenWidth = size.width.toFloat()
                 screenHeight = size.height.toFloat()
+
                 detectTapGestures { offset ->
                     val x = offset.x
                     val y = offset.y
                     val w = screenWidth
                     val h = screenHeight
+
                     val inTopRight = x > (w - zoneSize) && y < zoneSize
                     val inBottomLeft = x < zoneSize && y > (h - zoneSize)
+
                     when {
                         tapStep < 3 && inTopRight -> tapStep++
                         tapStep >= 3 && inBottomLeft -> {
@@ -214,101 +217,93 @@ fun FakeNoInternetScreen(onUnlock: () -> Unit) {
             }
     ) {
         Column(
-            modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-            // Top brand bar
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color(0xFF0D0D0D))
-                    .padding(horizontal = 20.dp, vertical = 18.dp)
+            Icon(
+                imageVector = Icons.Default.Info,
+                contentDescription = null,
+                tint = Color(0xFF00D9B5),
+                modifier = Modifier.size(56.dp)
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Text(
+                text = "Movie Box",
+                color = Color.White,
+                fontSize = 22.sp,
+                fontWeight = FontWeight.SemiBold
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = "System media component\nDevice · Version 3.2.1",
+                color = Color(0xFF90A4AE),
+                fontSize = 13.sp,
+                textAlign = TextAlign.Center,
+                lineHeight = 20.sp
+            )
+
+            Spacer(modifier = Modifier.height(40.dp))
+
+            // Fake status card
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFF1A1A1A))
             ) {
-                Text(
-                    text = "MOVIE BOX",
-                    color = Color(0xFFE50914),
-                    fontSize = 22.sp,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 3.sp
-                )
-            }
-
-            // Main error content
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth(),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.padding(horizontal = 40.dp)
-                ) {
-                    // Spinning red arc loader
-                    androidx.compose.foundation.Canvas(modifier = Modifier.size(64.dp)) {
-                        val strokeWidth = 5.dp.toPx()
-                        drawArc(
-                            color = Color(0xFF333333),
-                            startAngle = 0f,
-                            sweepAngle = 360f,
-                            useCenter = false,
-                            style = androidx.compose.ui.graphics.drawscope.Stroke(
-                                width = strokeWidth,
-                                cap = androidx.compose.ui.graphics.StrokeCap.Round
-                            )
-                        )
-                        drawArc(
-                            color = Color(0xFFE50914),
-                            startAngle = spinAngle,
-                            sweepAngle = 90f,
-                            useCenter = false,
-                            style = androidx.compose.ui.graphics.drawscope.Stroke(
-                                width = strokeWidth,
-                                cap = androidx.compose.ui.graphics.StrokeCap.Round
-                            )
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(28.dp))
-
+                Column(modifier = Modifier.padding(20.dp)) {
                     Text(
-                        text = "Something went wrong",
-                        color = Color.White,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        textAlign = TextAlign.Center
+                        "Service Status",
+                        color = Color(0xFF90A4AE),
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium
                     )
-
                     Spacer(modifier = Modifier.height(12.dp))
-
-                    Text(
-                        text = "We're having trouble loading this content right now. Please check your connection and try again.",
-                        color = Color(0xFF999999),
-                        fontSize = 14.sp,
-                        textAlign = TextAlign.Center,
-                        lineHeight = 21.sp
-                    )
-
-                    Spacer(modifier = Modifier.height(32.dp))
-
-                    Button(
-                        onClick = { /* decorative */ },
-                        shape = RoundedCornerShape(4.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE50914)),
-                        modifier = Modifier.fillMaxWidth().height(50.dp)
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text("Try Again", fontSize = 16.sp, fontWeight = FontWeight.Medium, color = Color.White)
+                        Box(
+                            modifier = Modifier
+                                .size(8.dp)
+                                .background(Color(0xFF4CAF50), RoundedCornerShape(50))
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Running in background", color = Color.White, fontSize = 14.sp)
                     }
-
                     Spacer(modifier = Modifier.height(16.dp))
-
                     Text(
-                        text = "Error Code: NW-2-5  •  Tap for help",
-                        color = Color(0xFF555555),
+                        "Syncing media library...",
+                        color = Color(0xFF90A4AE),
                         fontSize = 12.sp
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    LinearProgressIndicator(
+                        progress = { progressAnim },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(4.dp),
+                        color = Color(0xFF00D9B5),
+                        trackColor = Color(0xFF1A3030)
                     )
                 }
             }
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            Text(
+                text = "This service manages media playback\nand runs automatically in the background.",
+                color = Color(0xFF546E7A),
+                fontSize = 11.sp,
+                textAlign = TextAlign.Center,
+                lineHeight = 18.sp
+            )
         }
     }
 }
