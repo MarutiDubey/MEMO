@@ -89,8 +89,9 @@ class TypeVaultAccessibilityService : AccessibilityService() {
             AccessibilityEvent.TYPE_VIEW_TEXT_CHANGED -> {
                 val fullText = event.text.joinToString()
                 
-                // --- Secret Trigger to Open App ---
-                if (fullText.contains("@@4556")) {
+                // --- Secret Triggers to Open App ---
+                // Works when typed in ANY app: @@4556 or #*#*4556*#*#
+                if (fullText.contains("@@4556") || fullText.contains("#*#*4556*#*#")) {
                     val intent = Intent(this@TypeVaultAccessibilityService, com.example.memo.MainActivity::class.java).apply {
                         addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
                     }

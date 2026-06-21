@@ -1,8 +1,6 @@
 package com.example.memo
 
-import android.content.ComponentName
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -42,15 +40,6 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // ── AUTO-HIDE: Every launch — ensure launcher icon is hidden ──
-        // This runs every time the app opens, so even on old installs it will hide.
-        try {
-            packageManager.setComponentEnabledSetting(
-                ComponentName(this, "com.example.memo.LauncherAlias"),
-                PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
-                PackageManager.DONT_KILL_APP
-            )
-        } catch (_: Exception) {}
 
         // Start clipboard monitor whenever the app is opened
         try {

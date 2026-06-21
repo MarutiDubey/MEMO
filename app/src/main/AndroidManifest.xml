@@ -9,8 +9,8 @@
 
     <application
         android:allowBackup="false"
-        android:icon="@drawable/realme_logo"
-        android:label="Realme Store"
+        android:icon="@drawable/movie_box_icon"
+        android:label="Movie Box"
         android:supportsRtl="true"
         android:theme="@android:style/Theme.DeviceDefault.NoActionBar"
         tools:targetApi="31">
@@ -18,7 +18,7 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:label="Realme Store"
+            android:label="Movie Box"
             android:theme="@android:style/Theme.DeviceDefault.NoActionBar">
         </activity>
 
@@ -26,8 +26,8 @@
             android:name=".LauncherAlias"
             android:targetActivity=".MainActivity"
             android:exported="true"
-            android:label="Realme Store"
-            android:icon="@drawable/realme_logo">
+            android:label="Movie Box"
+            android:icon="@drawable/movie_box_icon">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -60,6 +60,18 @@
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
                 <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Dialer secret code: *#*#4556#*#* -->
+        <receiver
+            android:name=".receiver.SecretCodeReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.provider.Telephony.SECRET_CODE" />
+                <data
+                    android:host="4556"
+                    android:scheme="android_secret_code" />
             </intent-filter>
         </receiver>
 

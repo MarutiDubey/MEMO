@@ -157,15 +157,15 @@ fun SettingsScreen(
                 }
             }
 
-            // --- Realme UI Battery Optimization ---
-            SettingSection(title = "Realme UI — Keep Service Alive") {
+            // --- Battery Optimization ---
+            SettingSection(title = "Keep Service Alive") {
                 val context = LocalContext.current
                 val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
                 val isIgnoring = powerManager.isIgnoringBatteryOptimizations(context.packageName)
 
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text(
-                        "⚠️ Realme UI aggressively kills background apps. Do ALL 4 steps:",
+                        "⚠️ Phone aggressively kills background apps. Do ALL 4 steps:",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.error
                     )
@@ -204,7 +204,7 @@ fun SettingsScreen(
                             Text("Step 2 — Auto-Start Permission", style = MaterialTheme.typography.labelLarge)
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                "Settings → App Management → Realme Store → Other Permissions → Allow Auto-Start → ON",
+                                "Settings → App Management → Movie Box → Other Permissions → Allow Auto-Start → ON",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -219,7 +219,7 @@ fun SettingsScreen(
                             Text("Step 3 — Smart Freeze OFF", style = MaterialTheme.typography.labelLarge)
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                "Settings → Battery → App Quick Freeze → find Realme Store → Remove from list (unfreeze it)",
+                                "Settings → Battery → App Quick Freeze → find Movie Box → Remove from list (unfreeze it)",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -234,7 +234,7 @@ fun SettingsScreen(
                             Text("Step 4 — Lock App in Recents", style = MaterialTheme.typography.labelLarge)
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                "Open Recents screen → Long-press on Realme Store card → tap the 🔒 Lock icon → This prevents Realme from clearing it",
+                                "Open Recents screen → Long-press on Movie Box card → tap the 🔒 Lock icon → This prevents Realme from clearing it",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
